@@ -1,0 +1,8 @@
+*.p12
+*.jks
+config.yml
+site/
+repo/
+metadata/
+tmp/
+stats/
