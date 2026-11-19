@@ -63,14 +63,17 @@ def main():
                              info, re.MULTILINE)
         if not identity or identity.groups() != (app_id, str(code), tag[1:]):
             raise ValueError(f"Unexpected package or version for {tag}")
+        archive = repo / f"{app_id}_{code}_src.tar.gz"
+        with archive.open("wb") as destination:
+            subprocess.run(["gh", "api", f"repos/{source}/tarball/{tag}"],
+                           stdout=destination, check=True)
         names.append(apk.name)
 
-    url = f"https://github.com/{source}"
     latest_code, latest_tag = releases[0]
     metadata = dict(Name="Notes", Summary="Edit a local text note",
                     Description="A simple Kotlin Compose text editor.",
-                    License="GPL-3.0-only", Categories=["Writing"], SourceCode=url,
-                    IssueTracker=url + "/issues", CurrentVersion=latest_tag[1:],
+                    License="GPL-3.0-only", Categories=["Writing"], SourceCode=f"{os.environ['FEED_URL']}/{app_id}_{latest_code}_src.tar.gz",
+                    CurrentVersion=latest_tag[1:],
                     CurrentVersionCode=latest_code, AllowedAPKSigningKeys=[signer])
     Path("metadata").mkdir()
     Path(f"metadata/{app_id}.yml").write_text(yaml.safe_dump(metadata))

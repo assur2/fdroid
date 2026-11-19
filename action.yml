@@ -1,0 +1,36 @@
+name: Build signed Notes catalog
+description: Verify release APKs, collect their source archives and sign the F-Droid index.
+inputs:
+  keystore:
+    description: Base64 catalog signing keystore
+    required: true
+  password:
+    description: Catalog signing password
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: android-actions/setup-android@v3
+      with:
+        packages: platform-tools
+    - name: Install catalog tools
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y fdroidserver
+        sdkmanager 'build-tools;35.0.0'
+    - name: Prepare catalog in an isolated directory
+      shell: bash
+      run: |
+        mkdir "$RUNNER_TEMP/notes-catalog"
+        cd "$RUNNER_TEMP/notes-catalog"
+        cp "$GITHUB_ACTION_PATH/icon.png" .
+        /usr/bin/python3 "$GITHUB_ACTION_PATH/catalog.py"
+    - name: Sign and check the index
+      shell: bash
+      env:
+        KEYSTORE: ${{ inputs.keystore }}
+        PASSWORD: ${{ inputs.password }}
+      run: |
+        cd "$RUNNER_TEMP/notes-catalog"
+        bash "$GITHUB_ACTION_PATH/sign.sh"
