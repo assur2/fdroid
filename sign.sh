@@ -7,7 +7,7 @@ printf '%s' "$KEYSTORE" | base64 --decode > "$key"
 python3 - <<'PY'
 import os, yaml
 from pathlib import Path
-config = dict(repo_name="Notes", repo_description="Official Notes releases",
+config = dict(repo_name="Weare Apps", repo_description="Official Android app releases from Weare Apps",
               repo_url=os.environ["FEED_URL"], repo_icon="icon.png",
               keystore=str(Path(os.environ["RUNNER_TEMP"]) / "catalog.p12"),
               repo_keyalias="catalog", keystorepass=os.environ["PASSWORD"],
