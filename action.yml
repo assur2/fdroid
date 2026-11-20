@@ -16,8 +16,9 @@ runs:
     - name: Install catalog tools
       shell: bash
       run: |
-        sudo apt-get update
-        sudo apt-get install -y fdroidserver
+        python3 -m venv "$RUNNER_TEMP/fdroid-tools"
+        "$RUNNER_TEMP/fdroid-tools/bin/pip" install 'fdroidserver==2.4.5' 'androguard==4.1.4'
+        echo "$RUNNER_TEMP/fdroid-tools/bin" >> "$GITHUB_PATH"
         sdkmanager 'build-tools;35.0.0'
     - name: Prepare catalog in an isolated directory
       shell: bash
@@ -25,7 +26,7 @@ runs:
         mkdir "$RUNNER_TEMP/notes-catalog"
         cd "$RUNNER_TEMP/notes-catalog"
         cp "$GITHUB_ACTION_PATH/icon.png" .
-        /usr/bin/python3 "$GITHUB_ACTION_PATH/catalog.py"
+        python3 "$GITHUB_ACTION_PATH/catalog.py"
     - name: Sign and check the index
       shell: bash
       env:
