@@ -32,7 +32,7 @@ plus source archives to fdroid. Check the public repository's Pages deployment
 for final publication status. Re-run failed jobs if the catalog job fails after
 the GitHub Release exists.
 
-[Download page](https://assur2.github.io/fdroid/repo/) · [Release source archives](https://github.com/assur2/fdroid/tree/main/site/repo) (files ending in `_src.tar.gz`).
+[F-Droid installation page](https://assur2.github.io/fdroid/repo/) · [Release source downloads](https://assur2.github.io/fdroid/).
 The first release creates the subscription link and signed index. To check upgrades,
 install the first release through F-Droid, save a note, publish the next version,
 and confirm the note opens after upgrading.
