@@ -10,16 +10,28 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Check installed Android SDK
+      id: sdk
+      shell: bash
+      run: |
+        tools="$ANDROID_HOME/build-tools/35.0.0"
+        if [ -x "$tools/aapt" ] && [ -x "$tools/apksigner" ]; then
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+        fi
     - uses: android-actions/setup-android@v3
+      if: steps.sdk.outputs.ready != 'true'
       with:
         packages: platform-tools
+    - name: Install Android build tools
+      if: steps.sdk.outputs.ready != 'true'
+      shell: bash
+      run: sdkmanager 'build-tools;35.0.0'
     - name: Install catalog tools
       shell: bash
       run: |
         python3 -m venv "$RUNNER_TEMP/fdroid-tools"
         "$RUNNER_TEMP/fdroid-tools/bin/pip" install 'fdroidserver==2.4.5' 'androguard==4.1.4'
         echo "$RUNNER_TEMP/fdroid-tools/bin" >> "$GITHUB_PATH"
-        sdkmanager 'build-tools;35.0.0'
     - name: Prepare catalog in an isolated directory
       shell: bash
       run: |
