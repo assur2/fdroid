@@ -6,9 +6,8 @@ The Notes app repository is private. The public catalog repository
 and the corresponding source archive from the Git tag of every distributed version.
 
 ## CI
-Every branch push runs unit tests and lint. Pull requests and version tags additionally
-run the Android emulator. Non-release tag pushes run the fast checks. Pushes to a branch
-with an open pull request can have both a push run and a PR run.
+Run unit tests and lint from Actions > Test Notes > Run workflow. Select the emulator
+option to include the Android editor test. Tests run only on manual request.
 
 ## Signing and hosting
 The Notes repository holds two tag-restricted GitHub Actions environments.
@@ -26,7 +25,7 @@ and recoverable passwords backed up outside Git. Replacing either changes identi
 ## Release
 Tag a reviewed main commit with vMAJOR.MINOR.PATCH (each component 0..999, increasing).
 For example, push v0.1.0 to create the first release. CI assigns Android versionCode 1000.
-After tests pass the workflow signs the APK, creates a private GitHub Release,
+The release workflow builds and signs the APK, creates a private GitHub Release,
 builds a signed catalog from the three latest stable releases, and pushes the feed
 plus source archives to fdroid. Check the public repository's Pages deployment
 for final publication status. Re-run failed jobs if the catalog job fails after
