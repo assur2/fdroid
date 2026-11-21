@@ -12,6 +12,9 @@ APPS = [
      "9eaada59bb9ff563d7b17efdb937fa8830c97fee78f536c9d75ca9e8f4b83472"),
     ("assur2/opvang", "org.weare.opvang", "Opvang", "Lees je KOVnet-ouderportaal", "Reading",
      "9afe0a27e5b84ed788a9a9db35ac2ed9f995fb6da436e47ea42da2907c139bdd"),
+    ("assur2/glasswater-defense", "org.weare.glasswaterdefense", "Glasswater Defense",
+     "Defend a canal lock across 12 waves", "Games",
+     "de0385f0c407af4c4462121a66ec330f27a17d3f5ab52742338178e5bc1f2de4"),
 ]
 
 
