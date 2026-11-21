@@ -43,11 +43,12 @@ def releases(source):
 def collect(source, app_id, name, summary, category, signer):
     tools = Path(os.environ["ANDROID_HOME"]) / "build-tools/35.0.0"
     names = []
+    asset_name = name.replace(' ', '.') + '.apk'
     versions = releases(source)
     for code, tag in versions:
         apk = Path("repo") / f"{app_id}_{code}.apk"
         subprocess.run(["gh", "release", "download", tag, "--repo", source,
-                        "--pattern", f"{name}.apk", "--output", apk], check=True)
+                        "--pattern", asset_name, "--output", apk], check=True)
         certs = output(tools / "apksigner", "verify", "--print-certs", apk)
         actual = re.findall(r"^Signer #\d+ certificate SHA-256 digest: (\w+)$", certs, re.MULTILINE)
         if actual != [signer]:
