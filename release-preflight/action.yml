@@ -1,0 +1,18 @@
+name: Require F-Droid catalog preflight
+description: Start the shared read-only catalog check and require its successful result before releasing.
+inputs:
+  token:
+    description: GitHub token with Actions read and write access to assur2/notes
+    required: true
+  publisher-ref:
+    description: Approved catalog publisher tag in assur2/notes
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Require the shared catalog access check
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        PUBLISHER_REF: ${{ inputs.publisher-ref }}
+      run: bash "$GITHUB_ACTION_PATH/check.sh"
