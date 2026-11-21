@@ -7,10 +7,27 @@ inputs:
   password:
     description: Catalog signing password
     required: true
+  current-index:
+    description: Path to the current index-v1.json
+    required: true
+outputs:
+  changed:
+    description: Whether a new catalog was generated
+    value: ${{ steps.plan.outputs.changed }}
 runs:
   using: composite
   steps:
+    - name: Compare signed release inputs with the live catalog
+      id: plan
+      shell: bash
+      env:
+        CURRENT_INDEX: ${{ inputs.current-index }}
+      run: |
+        set -euo pipefail
+        changed=$(python3 "$GITHUB_ACTION_PATH/catalog.py" --check "$CURRENT_INDEX")
+        echo "changed=$changed" >> "$GITHUB_OUTPUT"
     - name: Check installed Android SDK
+      if: steps.plan.outputs.changed == 'true'
       id: sdk
       shell: bash
       run: |
@@ -19,20 +36,22 @@ runs:
           echo "ready=true" >> "$GITHUB_OUTPUT"
         fi
     - uses: android-actions/setup-android@v3
-      if: steps.sdk.outputs.ready != 'true'
+      if: steps.plan.outputs.changed == 'true' && steps.sdk.outputs.ready != 'true'
       with:
         packages: platform-tools
     - name: Install Android build tools
-      if: steps.sdk.outputs.ready != 'true'
+      if: steps.plan.outputs.changed == 'true' && steps.sdk.outputs.ready != 'true'
       shell: bash
       run: sdkmanager 'build-tools;35.0.0'
     - name: Install catalog tools
+      if: steps.plan.outputs.changed == 'true'
       shell: bash
       run: |
         python3 -m venv "$RUNNER_TEMP/fdroid-tools"
         "$RUNNER_TEMP/fdroid-tools/bin/pip" install 'fdroidserver==2.4.5' 'androguard==4.1.4'
         echo "$RUNNER_TEMP/fdroid-tools/bin" >> "$GITHUB_PATH"
     - name: Prepare catalog in an isolated directory
+      if: steps.plan.outputs.changed == 'true'
       shell: bash
       run: |
         mkdir "$RUNNER_TEMP/notes-catalog"
@@ -40,6 +59,7 @@ runs:
         cp "$GITHUB_ACTION_PATH/icon.png" .
         python3 "$GITHUB_ACTION_PATH/catalog.py"
     - name: Sign and check the index
+      if: steps.plan.outputs.changed == 'true'
       shell: bash
       env:
         KEYSTORE: ${{ inputs.keystore }}

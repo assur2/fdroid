@@ -2,10 +2,10 @@
 import json
 import os
 import re
+import shutil
 import subprocess
+import sys
 from pathlib import Path
-
-import yaml
 
 APPS = [
     ("assur2/notes", "org.weare.notes", "Notes", "Edit a local text note", "Writing",
@@ -15,14 +15,37 @@ APPS = [
     ("assur2/glasswater-defense", "org.weare.glasswaterdefense", "Glasswater Defense",
      "Defend a canal lock across 12 waves", "Games",
      "de0385f0c407af4c4462121a66ec330f27a17d3f5ab52742338178e5bc1f2de4"),
+    ("assur2/clover-card-room", "org.weare.clovercardroom", "Clover Card Room",
+     "Play Poker, Hearts, Klaverjassen, Solitaire and Switchyard offline", "Games",
+     "227f6eaaedd67b44bed93d1d101cbae3d9b1f749c06c78d0c73e8ced89334202"),
 ]
+
+ARTIFACT_STORES = {
+    "assur2/opvang": "OPVANG_ARTIFACTS",
+    "assur2/glasswater-defense": "GLASSWATER_ARTIFACTS",
+    "assur2/clover-card-room": "CLOVER_ARTIFACTS",
+}
 
 
 def output(*args):
     return subprocess.check_output(args, text=True)
 
 
-def releases(source):
+def releases(source, app_id):
+    if source in ARTIFACT_STORES:
+        store = Path(os.environ[ARTIFACT_STORES[source]])
+        packages = []
+        for apk in store.glob(f"{app_id}_*.apk"):
+            code = int(apk.stem.split("_", 1)[1])
+            if not 0 < code <= 999_999_999 or not apk.with_name(f"{apk.stem}_src.tar.gz").is_file():
+                raise ValueError(f"Incomplete or invalid staged release: {apk.name}")
+            major, rest = divmod(code, 1_000_000)
+            minor, patch = divmod(rest, 1000)
+            packages.append((code, f"v{major}.{minor}.{patch}"))
+        if not packages:
+            raise RuntimeError(f"No staged stable release for {source}")
+        return sorted(packages, reverse=True)[:3]
+
     pages = json.loads(output("gh", "api", "--paginate", "--slurp",
                               f"repos/{source}/releases?per_page=100"))
     selected = []
@@ -40,15 +63,23 @@ def releases(source):
     return sorted(selected, reverse=True)[:3]
 
 
-def collect(source, app_id, name, summary, category, signer):
+def collect(source, app_id, name, summary, category, signer, versions):
+    import yaml
+
     tools = Path(os.environ["ANDROID_HOME"]) / "build-tools/35.0.0"
     names = []
-    asset_name = name.replace(' ', '.') + '.apk'
-    versions = releases(source)
     for code, tag in versions:
         apk = Path("repo") / f"{app_id}_{code}.apk"
-        subprocess.run(["gh", "release", "download", tag, "--repo", source,
-                        "--pattern", asset_name, "--output", apk], check=True)
+        archive = apk.with_name(f"{apk.stem}_src.tar.gz")
+        if source in ARTIFACT_STORES:
+            store = Path(os.environ[ARTIFACT_STORES[source]])
+            shutil.copyfile(store / apk.name, apk)
+            shutil.copyfile(store / archive.name, archive)
+        else:
+            subprocess.run(["gh", "release", "download", tag, "--repo", source,
+                            "--pattern", name.replace(" ", ".") + ".apk", "--output", apk], check=True)
+            with archive.open("wb") as file:
+                subprocess.run(["gh", "api", f"repos/{source}/tarball/{tag}"], stdout=file, check=True)
         certs = output(tools / "apksigner", "verify", "--print-certs", apk)
         actual = re.findall(r"^Signer #\d+ certificate SHA-256 digest: (\w+)$", certs, re.MULTILINE)
         if actual != [signer]:
@@ -57,8 +88,6 @@ def collect(source, app_id, name, summary, category, signer):
         identity = re.search(r"^package: name='([^']+)' versionCode='(\d+)' versionName='([^']+)'", info, re.MULTILINE)
         if not identity or identity.groups() != (app_id, str(code), tag[1:]):
             raise ValueError(f"Unexpected APK identity for {source}@{tag}")
-        with apk.with_name(f"{apk.stem}_src.tar.gz").open("wb") as archive:
-            subprocess.run(["gh", "api", f"repos/{source}/tarball/{tag}"], stdout=archive, check=True)
         names.append(apk.name)
 
     latest_code, latest_tag = versions[0]
@@ -70,9 +99,29 @@ def collect(source, app_id, name, summary, category, signer):
     return names
 
 
-if __name__ == "__main__":
+def main():
+    versions = {app_id: releases(source, app_id) for source, app_id, *_ in APPS}
+    if len(sys.argv) == 3 and sys.argv[1] == "--check":
+        indexed = json.loads(Path(sys.argv[2]).read_text())["packages"]
+        missing_apps = set(indexed) - versions.keys()
+        if missing_apps:
+            raise ValueError(f"Catalog configuration would remove existing apps: {sorted(missing_apps)}")
+        expected = {app_id: {code for code, _ in tags} for app_id, tags in versions.items()}
+        actual = {app_id: {int(item["versionCode"]) for item in items} for app_id, items in indexed.items()}
+        for app_id, published in actual.items():
+            desired = expected[app_id]
+            if max(desired) < max(published) or published - desired and len(desired) < 3:
+                raise ValueError(f"Release inputs would roll back or drop retained releases for {app_id}")
+        print("true" if expected != actual else "false")
+        return
+    if len(sys.argv) != 1:
+        raise SystemExit("Usage: catalog.py [--check index-v1.json]")
     Path("repo").mkdir()
     Path("metadata").mkdir()
-    expected = [name for app in APPS for name in collect(*app)]
+    expected = [name for app in APPS for name in collect(*app, versions[app[1]])]
     Path("expected-apks.txt").write_text("\n".join(expected))
+
+
+if __name__ == "__main__":
+    main()
 

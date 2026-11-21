@@ -1,0 +1,23 @@
+name: Stage an F-Droid release
+description: Place the exact signed release APK and tagged source on the repository's private artifact branch.
+inputs:
+  apk:
+    description: Exact file name of the signed GitHub release asset
+    required: true
+  app-id:
+    description: Stable Android application ID
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        path: catalog-release-source
+    - name: Stage the release atomically
+      shell: bash
+      working-directory: catalog-release-source
+      env:
+        APK_NAME: ${{ inputs.apk }}
+        APP_ID: ${{ inputs.app-id }}
+        GH_TOKEN: ${{ github.token }}
+      run: bash "$GITHUB_ACTION_PATH/stage.sh"
