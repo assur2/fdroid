@@ -1,4 +1,4 @@
-"""Build the public input directory for fdroid update on a fresh CI runner."""
+"""Collect the three newest stable releases per app for a fresh signed catalog."""
 import json
 import os
 import re
@@ -7,78 +7,68 @@ from pathlib import Path
 
 import yaml
 
-
-def version(tag):
-    component = r"(0|[1-9][0-9]{0,2})"
-    match = re.fullmatch("v" + r"\.".join([component] * 3), tag)
-    if not match:
-        return None
-    major, minor, patch = map(int, match.groups())
-    return major * 1_000_000 + minor * 1000 + patch
-
-
-def select_releases(pages):
-    selected = []
-    for page in pages:
-        for release in page:
-            if release["draft"] or release["prerelease"]:
-                continue
-            tag = release["tag_name"]
-            code = version(tag)
-            if code:
-                selected.append((code, tag))
-    if not selected:
-        raise RuntimeError("No stable vMAJOR.MINOR.PATCH releases found")
-    return sorted(selected, reverse=True)[:3]
+APPS = [
+    ("assur2/notes", "org.weare.notes", "Notes", "Edit a local text note", "Writing",
+     "9eaada59bb9ff563d7b17efdb937fa8830c97fee78f536c9d75ca9e8f4b83472"),
+    ("assur2/opvang", "org.weare.opvang", "Opvang", "Lees je KOVnet-ouderportaal", "Reading",
+     "9afe0a27e5b84ed788a9a9db35ac2ed9f995fb6da436e47ea42da2907c139bdd"),
+]
 
 
 def output(*args):
     return subprocess.check_output(args, text=True)
 
 
-def main():
-    source = os.environ["NOTES_REPO"]
-    app_id = os.environ["APP_ID"]
-    signer = os.environ["APK_SHA256"].lower()
-    if not re.fullmatch(r"[0-9a-f]{64}", signer):
-        raise ValueError("APK_SHA256 must be a hex SHA-256 fingerprint without colons")
-    tools = Path(os.environ["ANDROID_HOME"]) / "build-tools/35.0.0"
+def releases(source):
     pages = json.loads(output("gh", "api", "--paginate", "--slurp",
                               f"repos/{source}/releases?per_page=100"))
-    releases = select_releases(pages)
-    repo = Path("repo")
-    repo.mkdir()
+    selected = []
+    for page in pages:
+        for release in page:
+            tag = release["tag_name"]
+            match = re.fullmatch(r"v(0|[1-9]\d{0,2})\.(0|[1-9]\d{0,2})\.(0|[1-9]\d{0,2})", tag)
+            if match and not release["draft"] and not release["prerelease"]:
+                major, minor, patch = map(int, match.groups())
+                code = major * 1_000_000 + minor * 1000 + patch
+                if code:
+                    selected.append((code, tag))
+    if not selected:
+        raise RuntimeError(f"No stable release for {source}")
+    return sorted(selected, reverse=True)[:3]
+
+
+def collect(source, app_id, name, summary, category, signer):
+    tools = Path(os.environ["ANDROID_HOME"]) / "build-tools/35.0.0"
     names = []
-    for code, tag in releases:
-        apk = repo / f"{app_id}_{code}.apk"
+    versions = releases(source)
+    for code, tag in versions:
+        apk = Path("repo") / f"{app_id}_{code}.apk"
         subprocess.run(["gh", "release", "download", tag, "--repo", source,
-                        "--pattern", "Notes.apk", "--output", apk], check=True)
+                        "--pattern", f"{name}.apk", "--output", apk], check=True)
         certs = output(tools / "apksigner", "verify", "--print-certs", apk)
-        actual = re.findall(r"^Signer #\d+ certificate SHA-256 digest: (\w+)$",
-                            certs, re.MULTILINE)
+        actual = re.findall(r"^Signer #\d+ certificate SHA-256 digest: (\w+)$", certs, re.MULTILINE)
         if actual != [signer]:
-            raise ValueError(f"Unexpected signer for {tag}")
+            raise ValueError(f"Unexpected APK signer for {source}@{tag}")
         info = output(tools / "aapt", "dump", "badging", apk)
-        identity = re.search(r"^package: name='([^']+)' versionCode='(\d+)' versionName='([^']+)'",
-                             info, re.MULTILINE)
+        identity = re.search(r"^package: name='([^']+)' versionCode='(\d+)' versionName='([^']+)'", info, re.MULTILINE)
         if not identity or identity.groups() != (app_id, str(code), tag[1:]):
-            raise ValueError(f"Unexpected package or version for {tag}")
-        archive = repo / f"{app_id}_{code}_src.tar.gz"
-        with archive.open("wb") as destination:
-            subprocess.run(["gh", "api", f"repos/{source}/tarball/{tag}"],
-                           stdout=destination, check=True)
+            raise ValueError(f"Unexpected APK identity for {source}@{tag}")
+        with apk.with_name(f"{apk.stem}_src.tar.gz").open("wb") as archive:
+            subprocess.run(["gh", "api", f"repos/{source}/tarball/{tag}"], stdout=archive, check=True)
         names.append(apk.name)
 
-    latest_code, latest_tag = releases[0]
-    metadata = dict(Name="Notes", Summary="Edit a local text note",
-                    Description="A simple Kotlin Compose text editor.",
-                    License="GPL-3.0-only", Categories=["Writing"], SourceCode=f"{os.environ['FEED_URL']}/{app_id}_{latest_code}_src.tar.gz",
-                    CurrentVersion=latest_tag[1:],
-                    CurrentVersionCode=latest_code, AllowedAPKSigningKeys=[signer])
-    Path("metadata").mkdir()
+    latest_code, latest_tag = versions[0]
+    metadata = dict(Name=name, Summary=summary, Description=summary,
+                    License="GPL-3.0-only", Categories=[category],
+                    SourceCode=f"{os.environ['FEED_URL']}/{app_id}_{latest_code}_src.tar.gz",
+                    CurrentVersion=latest_tag[1:], CurrentVersionCode=latest_code, AllowedAPKSigningKeys=[signer])
     Path(f"metadata/{app_id}.yml").write_text(yaml.safe_dump(metadata))
-    Path("expected-apks.txt").write_text("\n".join(names))
+    return names
 
 
 if __name__ == "__main__":
-    main()
+    Path("repo").mkdir()
+    Path("metadata").mkdir()
+    expected = [name for app in APPS for name in collect(*app)]
+    Path("expected-apks.txt").write_text("\n".join(expected))
+

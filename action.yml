@@ -1,4 +1,4 @@
-name: Build signed Notes catalog
+name: Build signed multi-app catalog
 description: Verify release APKs, collect their source archives and sign the F-Droid index.
 inputs:
   keystore:
@@ -47,3 +47,4 @@ runs:
       run: |
         cd "$RUNNER_TEMP/notes-catalog"
         bash "$GITHUB_ACTION_PATH/sign.sh"
+        python3 "$GITHUB_ACTION_PATH/sources.py" repo
