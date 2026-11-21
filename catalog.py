@@ -42,8 +42,6 @@ def releases(source, app_id):
             major, rest = divmod(code, 1_000_000)
             minor, patch = divmod(rest, 1000)
             packages.append((code, f"v{major}.{minor}.{patch}"))
-        if not packages:
-            raise RuntimeError(f"No staged stable release for {source}")
         return sorted(packages, reverse=True)[:3]
 
     pages = json.loads(output("gh", "api", "--paginate", "--slurp",
@@ -100,7 +98,8 @@ def collect(source, app_id, name, summary, category, signer, versions):
 
 
 def main():
-    versions = {app_id: releases(source, app_id) for source, app_id, *_ in APPS}
+    versions = {app_id: tags for source, app_id, *_ in APPS
+                if (tags := releases(source, app_id))}
     if len(sys.argv) == 3 and sys.argv[1] == "--check":
         indexed = json.loads(Path(sys.argv[2]).read_text())["packages"]
         missing_apps = set(indexed) - versions.keys()
@@ -118,7 +117,8 @@ def main():
         raise SystemExit("Usage: catalog.py [--check index-v1.json]")
     Path("repo").mkdir()
     Path("metadata").mkdir()
-    expected = [name for app in APPS for name in collect(*app, versions[app[1]])]
+    expected = [name for app in APPS if app[1] in versions
+                for name in collect(*app, versions[app[1]])]
     Path("expected-apks.txt").write_text("\n".join(expected))
 
 

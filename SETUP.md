@@ -10,3 +10,5 @@ Opvang, Glasswater Defense and Clover Card Room stage each signed GitHub release
 
 To update the publisher, commit changes here, update the commit pin in the Notes catalog workflow, and create a new `v-catalog-*` tag there. Allow the new tag in the Notes catalog signing environment and update the dispatch targets. Retire older publisher tags from the environment when a new app joins so stale snapshots cannot replace the index. The repository signing key stays in its existing environment.
 
+
+New private apps can be registered before their first APK is staged. The publisher omits them until an artifact branch appears and still refuses to remove any previously published app.
