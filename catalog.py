@@ -20,9 +20,13 @@ APPS = [
     ("assur2/clover-card-room", "org.weare.clovercardroom", "Clover Card Room",
      "Play Poker, Hearts, Klaverjassen, Solitaire and Switchyard offline", "Games",
      "227f6eaaedd67b44bed93d1d101cbae3d9b1f749c06c78d0c73e8ced89334202"),
+    ("assur2/ritwijzer", "org.weare.ritwijzer", "Ritwijzer",
+     "Plan je autoroute en vind verkeersinformatie, laadpunten en parkeerplaatsen", "Navigation",
+     "320ea41680186e62056362e95c9aec36180d84a216200bb962957431b8830092"),
 ]
 
 ARTIFACT_STORES = {
+    "assur2/ritwijzer": "RITWIJZER_ARTIFACTS",
     "assur2/opvang": "OPVANG_ARTIFACTS",
     "assur2/glasswater-defense": "GLASSWATER_ARTIFACTS",
     "assur2/albumvenster": "ALBUMVENSTER_ARTIFACTS",
