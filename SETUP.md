@@ -12,3 +12,5 @@ To update the publisher, commit changes here, update the commit pin in the Notes
 
 
 New private apps can be registered before their first APK is staged. The publisher omits them until an artifact branch appears and still refuses to remove any previously published app.
+
+Albumvenster (org.weare.albumvenster) stages its signed offline input test and GPL source on its private fdroid-artifacts branch. The publisher reads it with a dedicated read-only deploy key.
