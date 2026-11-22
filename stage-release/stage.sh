@@ -6,7 +6,7 @@ if [[ ! "$GITHUB_REF_NAME" =~ ^v(0|[1-9][0-9]{0,2})\.(0|[1-9][0-9]{0,2})\.(0|[1-
 fi
 code=$(( BASH_REMATCH[1]*1000000 + BASH_REMATCH[2]*1000 + BASH_REMATCH[3] ))
 (( code > 0 ))
-[[ "$APP_ID" =~ ^org\.weare\.[a-z][a-z0-9]*$ ]]
+[[ "$APP_ID" =~ ^org\.weare\.[a-z][a-z0-9]*$ || ( "$GITHUB_REPOSITORY" == "assur2/albumvenster" && "$APP_ID" == "us.mitene" ) ]]
 
 stage=$(mktemp -d)
 trap 'rm -rf -- "$stage"' EXIT

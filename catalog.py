@@ -15,7 +15,7 @@ APPS = [
     ("assur2/glasswater-defense", "org.weare.glasswaterdefense", "Glasswater Defense",
      "Defend a canal lock across 12 waves", "Games",
      "de0385f0c407af4c4462121a66ec330f27a17d3f5ab52742338178e5bc1f2de4"),
-    ("assur2/albumvenster", "org.weare.albumvenster", "Albumvenster", "Test gebruikersnaam en wachtwoord lokaal op je toestel", "Development",
+    ("assur2/albumvenster", "us.mitene", "Albumvenster", "Offline invoertest. Installatie naast FamilyAlbum is niet mogelijk.", "Development",
      "6951198d2cd89a497e3079f486db9f816b9ba23bbf7cd729d996a896541c116c"),
     ("assur2/clover-card-room", "org.weare.clovercardroom", "Clover Card Room",
      "Play Poker, Hearts, Klaverjassen, Solitaire and Switchyard offline", "Games",
