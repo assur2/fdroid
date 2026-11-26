@@ -23,9 +23,13 @@ APPS = [
     ("assur2/ritwijzer", "org.weare.ritwijzer", "Ritwijzer",
      "Plan je autoroute en vind verkeersinformatie, laadpunten en parkeerplaatsen", "Navigation",
      "320ea41680186e62056362e95c9aec36180d84a216200bb962957431b8830092"),
+    ("assur2/wachterlicht", "org.weare.wachterlicht", "Wachterlicht",
+     "Verdedig de vuurtoren tegen acht golven mechanische krabben", "Games",
+     "ab696749b945deb7a33e5fa5ae62dc4546e83d9b965263e465a7e4508d46de93"),
 ]
 
 ARTIFACT_STORES = {
+    "assur2/wachterlicht": "WACHTERLICHT_ARTIFACTS",
     "assur2/ritwijzer": "RITWIJZER_ARTIFACTS",
     "assur2/opvang": "OPVANG_ARTIFACTS",
     "assur2/glasswater-defense": "GLASSWATER_ARTIFACTS",
