@@ -15,8 +15,6 @@ APPS = [
     ("assur2/glasswater-defense", "org.weare.glasswaterdefense", "Glasswater Defense",
      "Defend a canal lock across 12 waves", "Games",
      "de0385f0c407af4c4462121a66ec330f27a17d3f5ab52742338178e5bc1f2de4"),
-    ("assur2/albumvenster", "us.mitene", "Albumvenster", "Offline invoertest. Installatie naast FamilyAlbum is niet mogelijk.", "Development",
-     "6951198d2cd89a497e3079f486db9f816b9ba23bbf7cd729d996a896541c116c"),
     ("assur2/clover-card-room", "org.weare.clovercardroom", "Clover Card Room",
      "Play Poker, Hearts, Klaverjassen, Solitaire and Switchyard offline", "Games",
      "227f6eaaedd67b44bed93d1d101cbae3d9b1f749c06c78d0c73e8ced89334202"),
@@ -33,7 +31,6 @@ ARTIFACT_STORES = {
     "assur2/ritwijzer": "RITWIJZER_ARTIFACTS",
     "assur2/opvang": "OPVANG_ARTIFACTS",
     "assur2/glasswater-defense": "GLASSWATER_ARTIFACTS",
-    "assur2/albumvenster": "ALBUMVENSTER_ARTIFACTS",
     "assur2/clover-card-room": "CLOVER_ARTIFACTS",
 }
 
@@ -113,12 +110,15 @@ def main():
                 if (tags := releases(source, app_id))}
     if len(sys.argv) == 3 and sys.argv[1] == "--check":
         indexed = json.loads(Path(sys.argv[2]).read_text())["packages"]
-        missing_apps = set(indexed) - versions.keys()
+        removed_package = "us.mitene"  # Albumvenster was withdrawn from distribution.
+        missing_apps = set(indexed) - versions.keys() - {removed_package}
         if missing_apps:
             raise ValueError(f"Catalog configuration would remove existing apps: {sorted(missing_apps)}")
         expected = {app_id: {code for code, _ in tags} for app_id, tags in versions.items()}
         actual = {app_id: {int(item["versionCode"]) for item in items} for app_id, items in indexed.items()}
         for app_id, published in actual.items():
+            if app_id == removed_package:
+                continue
             desired = expected[app_id]
             if max(desired) < max(published) or published - desired and len(desired) < 3:
                 raise ValueError(f"Release inputs would roll back or drop retained releases for {app_id}")
