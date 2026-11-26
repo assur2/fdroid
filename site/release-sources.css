@@ -1,4 +1,4 @@
-#release-sources {
+:is(#release-sources, #windows-download) {
   box-sizing: border-box;
   width: 600px;
   max-width: 90%;
@@ -9,16 +9,16 @@
   background: white;
   color: #223044;
 }
-#release-sources h2 {
+:is(#release-sources, #windows-download) h2 {
   margin: 0;
   padding: 14px 16px;
   background: #f4f6f9;
   text-align: left;
   font: 600 17px/1.3 system-ui, sans-serif;
 }
-#release-sources ul { list-style: none; margin: 0; padding: 0; }
-#release-sources li { border-top: 1px solid #e0e5eb; }
-#release-sources a {
+:is(#release-sources, #windows-download) ul { list-style: none; margin: 0; padding: 0; }
+:is(#release-sources, #windows-download) li { border-top: 1px solid #e0e5eb; }
+:is(#release-sources, #windows-download) a {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -31,6 +31,8 @@
   font: 500 15px/1.4 system-ui, sans-serif;
   text-decoration: none;
 }
-#release-sources a span { color: #184c89; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; }
-#release-sources a:hover, #release-sources a:focus-visible { background: #eff5fc; }
-#release-sources a:focus-visible { outline: 2px solid #184c89; outline-offset: -3px; }
+:is(#release-sources, #windows-download) a span { color: #184c89; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; }
+:is(#release-sources, #windows-download) a:hover, :is(#release-sources, #windows-download) a:focus-visible { background: #eff5fc; }
+:is(#release-sources, #windows-download) a:focus-visible { outline: 2px solid #184c89; outline-offset: -3px; }
+
+#windows-download p { margin: 0; padding: 0 16px 14px; text-align: left; color: #465465; }
