@@ -24,6 +24,9 @@ APPS = [
     ("assur2/wachterlicht", "org.weare.wachterlicht", "Wachterlicht",
      "Verdedig de vuurtoren tegen acht golven mechanische krabben", "Games",
      "ab696749b945deb7a33e5fa5ae62dc4546e83d9b965263e465a7e4508d46de93"),
+    ("assur2/pip-house", "org.weare.piphouse", "Pip House",
+     "Play Texas Hold'em, Hearts, Klaverjassen, Solitaire and Skip-Bo offline", "Games",
+     "f6568a1befb18296a7078528460172279bc84aedede81a20d0f8890c79d47797"),
 ]
 
 ARTIFACT_STORES = {
@@ -32,6 +35,7 @@ ARTIFACT_STORES = {
     "assur2/opvang": "OPVANG_ARTIFACTS",
     "assur2/glasswater-defense": "GLASSWATER_ARTIFACTS",
     "assur2/clover-card-room": "CLOVER_ARTIFACTS",
+    "assur2/pip-house": "PIPHOUSE_ARTIFACTS",
 }
 
 
